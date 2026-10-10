@@ -1,4 +1,4 @@
-﻿# Portable Linux on Windows (QEMU + Debian 12 + Bundled OpenSSH) - High Performance
+# Portable Linux on Windows (QEMU + Debian 12 + Bundled OpenSSH) - High Performance
 
 管理者権限なし、WSL不可のWindows環境向けに構築された、**完全ポータブル・Windows環境依存なし・レジストリ無接触・高速チューニング済み**のDebian仮想環境パッケージです。
 解凍して `start.bat` をダブルクリックするだけで、パスワード入力なし・1つのターミナル画面でそのまま使用できます。
@@ -57,5 +57,9 @@
    - **[1] Live ブート**: ディスクを作らず、ISO から直接お試し起動（QEMU ウィンドウが開きます）。
    - **[2] 新規ディスクにインストール**: 20GB の仮想ディスク（`disk\custom.qcow2`）を自動作成し、インストーラーを起動。
    - **[3] 既存ディスクに接続**: 既存の `custom.qcow2` に ISO を接続して起動。
-4. **インストール完了後の通常起動**:
+4. **インストール時のポイント (Kali / Debian / Ubuntu 等)**:
+   - **ブートメニューでの選択**: キーボードだけでスムーズに進行できるよう、`Graphical install` ではなく **`Install` (テキストモード)** の選択を推奨します。
+   - **ネットワーク設定時の待機**: 管理者権限なし環境（TCG CPUエミュレーション）のため、IPv6/DHCPの自動構成やコンポーネント展開で 2〜3 分間停止して見える場合がありますが、フリーズではないため待機してください。
+   - **ディスク書き込みの確認**: パーティション設定の最終画面（`Write the changes to disks?`）ではデフォルトが `<No>` になっているため、必ず `Tab` キーで **`<Yes>`** を選択して Enter を押してください。
+5. **インストール完了後の通常起動**:
    - インストール完了後は、**`start-custom.bat`** を実行することで、GUI 画面（デスクトップ環境）またはヘッドレス（SSH）で起動できます。
