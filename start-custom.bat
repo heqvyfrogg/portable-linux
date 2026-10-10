@@ -25,26 +25,28 @@ echo.
 set /p "DMODE=Enter choice (1-2) [default: 1]: "
 if "%DMODE%"=="" set "DMODE=1"
 
-if "%DMODE%"=="1" (
-  set "QEMU_GUI=%ROOT%\qemu\qemu-system-x86_64.exe"
-  echo [INFO] Launching with GUI Window...
-  start "" "%QEMU_GUI%" ^
-    -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
-    -drive file="%TARGET_DISK%",if=virtio,cache=unsafe ^
-    -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
-    -device virtio-rng-pci -vga virtio -display sdl
-  exit /b 0
-)
+if "%DMODE%"=="1" goto MODE_GUI
+if "%DMODE%"=="2" goto MODE_HEADLESS
+goto MODE_GUI
 
-if "%DMODE%"=="2" (
-  echo [INFO] Launching in background...
-  start "" "%QEMU%" ^
-    -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
-    -drive file="%TARGET_DISK%",if=virtio,cache=unsafe ^
-    -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
-    -device virtio-rng-pci -vga none -display none
-  echo [OK] Started. If SSH server is installed in the guest, connect using:
-  echo      ssh -p %SSH_PORT% username@127.0.0.1
-  pause
-  exit /b 0
-)
+:MODE_GUI
+set "QEMU_GUI=%ROOT%\qemu\qemu-system-x86_64.exe"
+echo [INFO] Launching with GUI Window...
+start "" "%QEMU_GUI%" ^
+  -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
+  -drive file="%TARGET_DISK%",if=virtio,cache=unsafe ^
+  -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
+  -device virtio-rng-pci -vga virtio -display sdl
+exit /b 0
+
+:MODE_HEADLESS
+echo [INFO] Launching in background...
+start "" "%QEMU%" ^
+  -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
+  -drive file="%TARGET_DISK%",if=virtio,cache=unsafe ^
+  -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
+  -device virtio-rng-pci -vga none -display none
+echo [OK] Started. If SSH server is installed in the guest, connect using:
+echo      ssh -p %SSH_PORT% username@127.0.0.1
+pause
+exit /b 0
