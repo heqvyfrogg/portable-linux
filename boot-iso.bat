@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 title Portable Linux - Boot from ISO
@@ -73,7 +73,7 @@ start "" "%QEMU_GUI%" ^
   -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
   -cdrom "%ISO_PATH%" -boot d ^
   -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
-  -device virtio-rng-pci -vga virtio -display sdl
+  -device virtio-rng-pci -device usb-tablet -vga virtio -display sdl
 exit /b 0
 
 :MODE_INSTALL
@@ -100,7 +100,7 @@ start "" "%QEMU_GUI%" ^
   -drive file="!TARGET_DISK!",if=virtio,cache=unsafe ^
   -cdrom "%ISO_PATH%" -boot d ^
   -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
-  -device virtio-rng-pci -vga virtio -display sdl
+  -device virtio-rng-pci -device usb-tablet -vga virtio -display sdl
 exit /b 0
 
 :MODE_ATTACH
@@ -115,5 +115,6 @@ start "" "%QEMU_GUI%" ^
   -drive file="!TARGET_DISK!",if=virtio,cache=unsafe ^
   -cdrom "%ISO_PATH%" ^
   -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
-  -device virtio-rng-pci -vga virtio -display sdl
+  -device virtio-rng-pci -device usb-tablet -vga virtio -display sdl
 exit /b 0
+

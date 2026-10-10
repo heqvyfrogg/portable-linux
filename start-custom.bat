@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 title Portable Linux - Custom OS
@@ -36,7 +36,7 @@ start "" "%QEMU_GUI%" ^
   -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
   -drive file="%TARGET_DISK%",if=virtio,cache=unsafe ^
   -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
-  -device virtio-rng-pci -vga virtio -display sdl
+  -device virtio-rng-pci -device usb-tablet -vga virtio -display sdl
 exit /b 0
 
 :MODE_HEADLESS
@@ -45,8 +45,9 @@ start "" "%QEMU%" ^
   -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
   -drive file="%TARGET_DISK%",if=virtio,cache=unsafe ^
   -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
-  -device virtio-rng-pci -vga none -display none
+  -device virtio-rng-pci -device usb-tablet -vga none -display none
 echo [OK] Started. If SSH server is installed in the guest, connect using:
 echo      ssh -p %SSH_PORT% username@127.0.0.1
 pause
 exit /b 0
+
