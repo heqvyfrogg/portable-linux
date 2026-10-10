@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 title Portable Linux - Boot from ISO
@@ -17,6 +17,10 @@ if not "%ISO_PATH%"=="" (
 )
 
 rem Check iso\ folder for any .iso
+for %%F in ("%ROOT%\*.iso") do (
+  set "ISO_PATH=%%F"
+  goto ISO_FOUND_IN_DIR
+)
 for %%F in ("%ROOT%\iso\*.iso") do (
   set "ISO_PATH=%%F"
   goto ISO_FOUND_IN_DIR
@@ -110,3 +114,4 @@ if "%MODE%"=="3" (
     -device virtio-rng-pci -vga virtio -display sdl
   exit /b 0
 )
+
