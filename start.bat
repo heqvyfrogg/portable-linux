@@ -1,0 +1,87 @@
+@echo off
+chcp 65001 >nul
+setlocal enabledelayedexpansion
+title Debian 12 (Portable)
+call "%~dp0scripts\00-common.bat"
+
+if not exist "%ROOT%\%DISK_IMAGE%" (
+  echo [INFO] First-time setup: Creating virtual disk...
+  call "%~dp0scripts\01-make-disk.bat"
+)
+
+rem 1. Check if QEMU is already running, if not launch with unsafe cache and tb-size=1024
+%SystemRoot%\System32\tasklist.exe /fi "imagename eq qemu-system-x86_64w.exe" 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64w" >nul
+if errorlevel 1 (
+  start "" "%QEMU%" ^
+    -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
+    -drive file="%ROOT%\%DISK_IMAGE%",if=virtio,cache=unsafe ^
+    -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
+    -device virtio-rng-pci -vga none -display none -serial file:"%ROOT%\boot.log"
+)
+
+rem 2. Progress loop
+set /a SEC=0
+<nul set /p="[INFO] Launching Debian... "
+
+:WAIT_SSH
+%SSH_CMD% %SSH_OPTS% -o BatchMode=yes -o ConnectTimeout=1 -o LogLevel=QUIET debian@127.0.0.1 "exit" 2>nul
+if not errorlevel 1 goto SSH_READY
+
+%SystemRoot%\System32\ping.exe 127.0.0.1 -n 2 >nul
+set /a SEC+=1
+<nul set /p="!SEC!s "
+
+if !SEC! geq 45 (
+  echo.
+  echo [ERROR] Boot timed out after 45 seconds.
+  pause
+  exit /b 1
+)
+goto WAIT_SSH
+
+:SSH_READY
+echo [Ready]
+
+rem 3. Optimize Guest I/O and DNS automatically
+rem - force-unsafe-io: dramatically accelerates apt/dpkg installation
+rem - resolv.conf: sets high-speed public DNS (1.1.1.1 / 8.8.8.8)
+%SSH_CMD% %SSH_OPTS% -o BatchMode=yes debian@127.0.0.1 "sudo sh -c 'echo force-unsafe-io > /etc/dpkg/dpkg.cfg.d/unsafe-io; printf \"nameserver 1.1.1.1\nnameserver 8.8.8.8\n\" > /etc/resolv.conf'" 2>nul
+
+cls
+echo ========================================================
+echo   Debian GNU/Linux 12 (Portable / QEMU - High Performance)
+echo   Memory: %MEM%MB  vCPU: %SMP% cores  Cache: unsafe (Fast I/O)
+echo   Type 'exit' to shut down VM and close window.
+echo ========================================================
+echo.
+
+rem 4. Interactive SSH session
+%SSH_CMD% -t %SSH_OPTS% debian@127.0.0.1
+
+rem 5. Clean automatic shutdown
+echo.
+echo ========================================================
+echo [INFO] Shell closed. Shutting down Debian safely...
+%SSH_CMD% %SSH_OPTS% -o BatchMode=yes -o ConnectTimeout=5 debian@127.0.0.1 "sudo poweroff" 2>nul
+
+set /a STOP_SEC=0
+<nul set /p="[INFO] Finalizing VM process... "
+
+:WAIT_STOP
+%SystemRoot%\System32\tasklist.exe /fi "imagename eq qemu-system-x86_64w.exe" 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64w" >nul
+if errorlevel 1 goto STOPPED
+
+%SystemRoot%\System32\ping.exe 127.0.0.1 -n 2 >nul
+set /a STOP_SEC+=1
+<nul set /p="!STOP_SEC!s "
+
+if !STOP_SEC! geq 15 (
+  %SystemRoot%\System32\taskkill.exe /f /im qemu-system-x86_64w.exe >nul 2>&1
+  goto STOPPED
+)
+goto WAIT_STOP
+
+:STOPPED
+echo [Done]
+echo [OK] Goodbye!
+%SystemRoot%\System32\ping.exe 127.0.0.1 -n 2 >nul
