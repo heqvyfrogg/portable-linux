@@ -10,22 +10,14 @@ echo   Ubuntu, Arch, Alpine, Kali, Fedora, etc.
 echo ========================================================
 echo.
 
-rem 1. Determine ISO file
+rem 1. Determine ISO file: from argument (drag & drop) or dedicated iso\ folder only
 set "ISO_PATH=%~1"
 if not "%ISO_PATH%"=="" (
   if exist "%ISO_PATH%" goto ISO_SELECTED
 )
 
-rem Check current directory, iso\, and images\ for any .iso
-for %%F in ("%ROOT%\*.iso") do (
-  set "ISO_PATH=%%F"
-  goto ISO_FOUND_IN_DIR
-)
+rem Check only the dedicated iso\ folder
 for %%F in ("%ROOT%\iso\*.iso") do (
-  set "ISO_PATH=%%F"
-  goto ISO_FOUND_IN_DIR
-)
-for %%F in ("%ROOT%\images\*.iso") do (
   set "ISO_PATH=%%F"
   goto ISO_FOUND_IN_DIR
 )
