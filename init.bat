@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 title Portable Linux - Initial Setup
@@ -6,7 +6,7 @@ set "ROOT=%~dp0"
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
 echo ========================================================
-echo   Portable Linux (Debian 12 + QEMU) Initial Setup
+echo   Portable Linux (Debian 13 + QEMU) Initial Setup
 echo   No Administrator Privileges Required.
 echo ========================================================
 echo.
@@ -61,11 +61,11 @@ if not exist "%ROOT%\qemu\qemu-system-x86_64w.exe" (
   echo [3/6] QEMU already present in qemu\
 )
 
-rem 5. Download Debian 12 Cloud Image
-set "BASE_IMG=%ROOT%\images\debian-12-genericcloud-amd64.qcow2"
+rem 5. Download Debian 13 Cloud Image (Trixie)
+set "BASE_IMG=%ROOT%\images\debian-13-genericcloud-amd64-daily.qcow2"
 if not exist "%BASE_IMG%" (
-  echo [4/6] Downloading Debian 12 cloud image (approx 350MB)...
-  curl.exe -L -o "%BASE_IMG%" "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
+  echo [4/6] Downloading Debian 13 cloud image (approx 350MB)...
+  curl.exe -L -o "%BASE_IMG%" "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-genericcloud-amd64-daily.qcow2"
 ) else (
   echo [4/6] Debian base cloud image already present.
 )
@@ -89,7 +89,7 @@ set "DIFF_IMG=%ROOT%\disk\debian.qcow2"
 if not exist "%DIFF_IMG%" (
   echo [6/6] Creating 20GB differential virtual disk...
   pushd "%ROOT%\disk"
-  "%ROOT%\qemu\qemu-img.exe" create -f qcow2 -b "..\images\debian-12-genericcloud-amd64.qcow2" -F qcow2 "debian.qcow2" 20G >nul
+  "%ROOT%\qemu\qemu-img.exe" create -f qcow2 -b "..\images\debian-13-genericcloud-amd64-daily.qcow2" -F qcow2 "debian.qcow2" 20G >nul
   popd
 ) else (
   echo [6/6] Differential disk already exists.
@@ -101,7 +101,7 @@ rmdir /s /q "%TOOLS%" >nul 2>&1
 echo.
 echo ========================================================
 echo   Setup Complete!
-echo   Run start.bat to launch your portable Debian 12 VM.
+echo   Run start.bat to launch your portable Debian 13 VM.
 echo ========================================================
 echo.
 pause

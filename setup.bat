@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 title Portable Linux Installer
@@ -9,7 +9,7 @@ if "%TARGET_DIR%"=="" set "TARGET_DIR=%~dp0"
 if "%TARGET_DIR:~-1%"=="\" set "TARGET_DIR=%TARGET_DIR:~0,-1%"
 
 echo ========================================================
-echo   Portable Linux (Debian 12 + QEMU) Installer
+echo   Portable Linux (Debian 13 + QEMU) Installer
 echo   Target: %TARGET_DIR%
 echo   No Administrator Privileges Required.
 echo ========================================================

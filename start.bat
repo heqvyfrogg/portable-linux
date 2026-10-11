@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
-title Debian 12 (Portable)
+title Debian 13 (Portable)
 call "%~dp0scripts\00-common.bat"
 
 rem 0. Check core dependencies (QEMU, SSH, Debian image)
@@ -82,11 +82,11 @@ exit /b 1
 echo [Ready]
 
 rem 3. Optimize Guest I/O, DNS, APT, Git, and system-wide terminal paste automatically
-%SSH_CMD% %SSH_OPTS% -o BatchMode=yes debian@127.0.0.1 "if [ ! -f /etc/.portable_speedup_applied ]; then sudo sh -c 'mkdir -p /etc/dpkg/dpkg.cfg.d /etc/apt/apt.conf.d /etc/apt/sources.list.d && echo force-unsafe-io > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && chattr -i /etc/resolv.conf 2>/dev/null; printf \"nameserver 1.1.1.1\nnameserver 8.8.8.8\noptions timeout:1 attempts:2 single-request\n\" > /etc/resolv.conf && chattr +i /etc/resolv.conf 2>/dev/null; printf \"Acquire::Languages \\\"none\\\";\nAPT::Acquire::Translation \\\"none\\\";\nAcquire::PDiffs \\\"false\\\";\nAcquire::ForceIPv4 \\\"true\\\";\n\" > /etc/apt/apt.conf.d/99speedup; printf \"Types: deb\nURIs: http://ftp.jaist.ac.jp/debian\nSuites: bookworm bookworm-updates bookworm-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.debian.org/debian-security\nSuites: bookworm-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\" > /etc/apt/sources.list.d/debian.sources; printf \"\nset enable-bracketed-paste on\n\" >> /etc/inputrc; printf \"\nunbind ^J main\nset softwrap\nset tabstospaces\nset tabsize 4\n\" >> /etc/nanorc; touch /etc/.portable_speedup_applied'; git config --global pack.threads 4; git config --global core.preloadindex true; fi" 2>nul
+%SSH_CMD% %SSH_OPTS% -o BatchMode=yes debian@127.0.0.1 "if [ ! -f /etc/.portable_speedup_applied ]; then sudo sh -c 'mkdir -p /etc/dpkg/dpkg.cfg.d /etc/apt/apt.conf.d /etc/apt/sources.list.d && echo force-unsafe-io > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && chattr -i /etc/resolv.conf 2>/dev/null; printf \"nameserver 1.1.1.1\nnameserver 8.8.8.8\noptions timeout:1 attempts:2 single-request\n\" > /etc/resolv.conf && chattr +i /etc/resolv.conf 2>/dev/null; printf \"Acquire::Languages \\\"none\\\";\nAPT::Acquire::Translation \\\"none\\\";\nAcquire::PDiffs \\\"false\\\";\nAcquire::ForceIPv4 \\\"true\\\";\n\" > /etc/apt/apt.conf.d/99speedup; printf \"Types: deb\nURIs: http://ftp.jaist.ac.jp/debian\nSuites: trixie trixie-updates trixie-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.debian.org/debian-security\nSuites: trixie-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\" > /etc/apt/sources.list.d/debian.sources; printf \"\nset enable-bracketed-paste on\n\" >> /etc/inputrc; printf \"\nunbind ^J main\nset softwrap\nset tabstospaces\nset tabsize 4\n\" >> /etc/nanorc; touch /etc/.portable_speedup_applied'; command -v git >/dev/null 2>&1 && { git config --global pack.threads 4; git config --global core.preloadindex true; }; fi" 2>nul
 
 cls
 echo ========================================================
-echo   Debian GNU/Linux 12 (Portable / QEMU - High Performance)
+echo   Debian GNU/Linux 13 (Portable / QEMU - High Performance)
 echo   Memory: %MEM%MB  vCPU: %SMP% cores  Cache: unsafe (Fast I/O)
 echo   Type 'exit' to shut down VM and close window.
 echo ========================================================

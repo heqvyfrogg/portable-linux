@@ -50,14 +50,15 @@ $u22 = "      set softwrap"
 $u23 = "      set tabstospaces"
 $u24 = "      set tabsize 4"
 
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $userContent = "$u1`n$u2`n$u3`n$u4`n$u5`n$u6`n$u7`n$u8`n$u9`n$u10`n$u11`n$u12`n$u13`n$u14`n$u15`n$u16`n$u17`n$u18`n$u19`n$u20`n$u21`n$u22`n$u23`n$u24`n"
-[System.IO.File]::WriteAllText($userPath, $userContent, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($userPath, $userContent, $utf8NoBom)
 
-# 2. meta-data を動的生成
+# 2. meta-data を動的生成 (BOMなしUTF-8)
 $metaContent = "instance-id: portable-debian-01`nlocal-hostname: debian-portable`n"
-[System.IO.File]::WriteAllText($metaPath, $metaContent, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($metaPath, $metaContent, $utf8NoBom)
 
-# 3. IMAPI2 を使って cidata.iso を生成 (純粋Windows標準API・外部ツール不要)
+# 3. IMAPI2 を使って cidata.iso を生成 (Joliet=2 + ISO9660=1 = 3 で長いファイル名を完全保持)
 if (-not (Test-Path $csPath)) {
     Write-Host "[ERROR] StreamSaver.cs not found: $csPath"
     exit 1
@@ -66,7 +67,7 @@ if (-not (Test-Path $csPath)) {
 Add-Type -Path $csPath
 
 $fsi = New-Object -ComObject IMAPI2FS.MsftFileSystemImage
-$fsi.FileSystemsToCreate = 1
+$fsi.FileSystemsToCreate = 3
 $fsi.VolumeName = "cidata"
 $fsi.Root.AddTree($cidataDir, $false)
 $res = $fsi.CreateResultImage()

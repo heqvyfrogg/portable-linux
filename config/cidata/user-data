@@ -1,5 +1,4 @@
 #cloud-config
-# This file is dynamically populated during init.bat with your machine's SSH key.
 users:
   - name: debian
     gecos: Debian Portable User
@@ -7,11 +6,12 @@ users:
     lock_passwd: false
     plain_text_passwd: debian
     shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDmWkl8qZKjGSwNIiLinyIi1yKFP6NPO6+fvHB1/W8xR User@DESKTOP-QCF7KU1
 
 ssh_pwauth: true
 chpasswd:
   expire: false
-
 write_files:
   - path: /etc/inputrc.d/portable.inputrc
     content: |
