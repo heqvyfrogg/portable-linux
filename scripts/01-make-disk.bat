@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 call "%~dp000-common.bat"
 if exist "%ROOT%\%DISK_IMAGE%" (
   echo [INFO] Disk image already exists: %DISK_IMAGE%

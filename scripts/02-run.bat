@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 call "%~dp000-common.bat"
 if not exist "%ROOT%\%DISK_IMAGE%" (
   echo [INFO] Disk not found. Running 01-make-disk.bat...

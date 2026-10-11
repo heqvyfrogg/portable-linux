@@ -1,0 +1,9 @@
+﻿# Enforce CRLF for all Windows batch files and scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.cs text eol=crlf
+*.ps1 text eol=crlf
+*.cfg text eol=crlf
+
+# Default for others
+* text=auto

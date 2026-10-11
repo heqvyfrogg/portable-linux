@@ -46,7 +46,23 @@
 
 ## 3. 使い方
 
-1. ZIP を任意の場所（デスクトップ、USB メモリ等）に解凍します。
+### 方法A: 1行コマンドで即座に導入（推奨・コピペ作成不要）
+任意のフォルダ（USBメモリや作業フォルダ）を開き、コマンドプロンプトまたはPowerShellで以下の**1行**を実行するだけで、全自動でダウンロード・展開されます:
+
+- **コマンドプロンプト (cmd)**:
+  ```cmd
+  curl.exe -sL "https://github.com/heqvyfrogg/portable-linux/releases/latest/download/setup.bat" -o setup.bat && setup.bat
+  ```
+
+- **PowerShell**:
+  ```powershell
+  curl.exe -sL "https://github.com/heqvyfrogg/portable-linux/releases/latest/download/setup.bat" -o setup.bat; .\setup.bat
+  ```
+
+---
+
+### 方法B: 手動ダウンロードで導入
+1. GitHub Releases の最新 `portable-linux.zip` を任意のフォルダに解凍します。
 2. フォルダ直下の **`start.bat`** をダブルクリックします。
 3. 自動で起動・高速化設定が行われ（約10秒）、Debian の bash プロンプトに入ります。
 4. 作業が終わったら **`exit`** と入力すると、自動で仮想マシンが安全に停止してウィンドウが閉じます。
