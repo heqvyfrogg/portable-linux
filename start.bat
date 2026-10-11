@@ -27,7 +27,7 @@ set /a SEC=0
 %SSH_CMD% %SSH_OPTS% -o BatchMode=yes -o ConnectTimeout=1 -o LogLevel=QUIET debian@127.0.0.1 "exit" 2>nul
 if not errorlevel 1 goto SSH_READY
 
-%SystemRoot%\System32\ping.exe 127.0.0.1 -n 2 >nul
+timeout /t 1 /nobreak >nul
 set /a SEC+=1
 <nul set /p="!SEC!s "
 
@@ -42,13 +42,8 @@ goto WAIT_SSH
 :SSH_READY
 echo [Ready]
 
-rem 3. Optimize Guest I/O, DNS, APT, and Git automatically
-rem - force-unsafe-io: skips per-file fsync, accelerating apt/dpkg
-rem - resolv.conf: locks fast IPv4 DNS (1.1.1.1 / 8.8.8.8) with 1s timeout
-rem - 99speedup: skips translation downloads and forces IPv4
-rem - debian.sources: uses high-speed Japan mirror (JAIST) without deb-src
-rem - git config: enables multithreaded pack processing and preloading
-%SSH_CMD% %SSH_OPTS% -o BatchMode=yes debian@127.0.0.1 "sudo sh -c 'mkdir -p /etc/dpkg/dpkg.cfg.d /etc/apt/apt.conf.d /etc/apt/sources.list.d && echo force-unsafe-io > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && chattr -i /etc/resolv.conf 2>/dev/null; printf \"nameserver 1.1.1.1\nnameserver 8.8.8.8\noptions timeout:1 attempts:2 single-request\n\" > /etc/resolv.conf && chattr +i /etc/resolv.conf 2>/dev/null; printf \"Acquire::Languages \\\"none\\\";\nAPT::Acquire::Translation \\\"none\\\";\nAcquire::PDiffs \\\"false\\\";\nAcquire::ForceIPv4 \\\"true\\\";\n\" > /etc/apt/apt.conf.d/99speedup; if [ ! -f /etc/apt/sources.list.d/.speedup_applied ]; then printf \"Types: deb\nURIs: http://ftp.jaist.ac.jp/debian\nSuites: bookworm bookworm-updates bookworm-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.debian.org/debian-security\nSuites: bookworm-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\" > /etc/apt/sources.list.d/debian.sources && touch /etc/apt/sources.list.d/.speedup_applied; fi'; git config --global pack.threads 4; git config --global core.preloadindex true" 2>nul
+rem 3. Optimize Guest I/O, DNS, APT, and Git automatically (only on first boot or when needed)
+%SSH_CMD% %SSH_OPTS% -o BatchMode=yes debian@127.0.0.1 "if [ ! -f /etc/.portable_speedup_applied ]; then sudo sh -c 'mkdir -p /etc/dpkg/dpkg.cfg.d /etc/apt/apt.conf.d /etc/apt/sources.list.d && echo force-unsafe-io > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && chattr -i /etc/resolv.conf 2>/dev/null; printf \"nameserver 1.1.1.1\nnameserver 8.8.8.8\noptions timeout:1 attempts:2 single-request\n\" > /etc/resolv.conf && chattr +i /etc/resolv.conf 2>/dev/null; printf \"Acquire::Languages \\\"none\\\";\nAPT::Acquire::Translation \\\"none\\\";\nAcquire::PDiffs \\\"false\\\";\nAcquire::ForceIPv4 \\\"true\\\";\n\" > /etc/apt/apt.conf.d/99speedup; printf \"Types: deb\nURIs: http://ftp.jaist.ac.jp/debian\nSuites: bookworm bookworm-updates bookworm-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.debian.org/debian-security\nSuites: bookworm-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\" > /etc/apt/sources.list.d/debian.sources; touch /etc/.portable_speedup_applied'; git config --global pack.threads 4; git config --global core.preloadindex true; fi" 2>nul
 
 cls
 echo ========================================================
@@ -74,7 +69,7 @@ set /a STOP_SEC=0
 %SystemRoot%\System32\tasklist.exe /fi "imagename eq qemu-system-x86_64w.exe" 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64w" >nul
 if errorlevel 1 goto STOPPED
 
-%SystemRoot%\System32\ping.exe 127.0.0.1 -n 2 >nul
+timeout /t 1 /nobreak >nul
 set /a STOP_SEC+=1
 <nul set /p="!STOP_SEC!s "
 
@@ -87,4 +82,4 @@ goto WAIT_STOP
 :STOPPED
 echo [Done]
 echo [OK] Goodbye!
-%SystemRoot%\System32\ping.exe 127.0.0.1 -n 2 >nul
+timeout /t 1 /nobreak >nul

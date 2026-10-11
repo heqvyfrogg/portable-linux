@@ -6,5 +6,7 @@ if exist "%ROOT%\%DISK_IMAGE%" (
   exit /b 0
 )
 echo [INFO] Creating differential disk (20GB)...
-"%QIMG%" create -f qcow2 -b "%ROOT%\%BASE_IMAGE%" -F qcow2 "%ROOT%\%DISK_IMAGE%" 20G
+pushd "%ROOT%\disk"
+"%QIMG%" create -f qcow2 -b "..\images\debian-12-genericcloud-amd64.qcow2" -F qcow2 "debian.qcow2" 20G
+popd
 echo [OK] Done.

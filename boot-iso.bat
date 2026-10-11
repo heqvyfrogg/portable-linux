@@ -35,7 +35,7 @@ goto ISO_SELECTED
 
 :CHOOSE_ISO_GUI
 echo [INFO] Opening file selector to choose ISO...
-for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.OpenFileDialog; $f.Filter = 'ISO Files (*.iso)|*.iso|All Files (*.*)|*.*'; $f.Title = 'Select Linux ISO File'; if($f.ShowDialog() -eq 'OK'){ $f.FileName }"`) do set "ISO_PATH=%%I"
+for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.OpenFileDialog; $f.Filter = 'ISO Files (*.iso)|*.iso|All Files (*.*)|*.*'; $f.Title = 'Select Linux ISO File'; $top = New-Object System.Windows.Forms.Form -Property @{TopMost=$true}; if($f.ShowDialog($top) -eq 'OK'){ $f.FileName }"` ) do set "ISO_PATH=%%I"
 
 if "%ISO_PATH%"=="" (
   echo [ERROR] No ISO file selected.
