@@ -55,6 +55,7 @@ echo [INFO] Launching in background...
 start "" "%QEMU%" -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% -drive file="!TARGET_DISK!",if=virtio,cache=unsafe -netdev user,id=n0,ipv6=off,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 -device virtio-rng-pci -device qemu-xhci -device usb-tablet -vga none -display none
 echo [OK] Started. If SSH server is installed in the guest, connect using:
 echo      ssh -p %SSH_PORT% username@127.0.0.1
+echo      To stop the background VM, run 'scripts\04-stop.bat' or close the process.
 if "%~1"=="" pause
 exit /b 0
 

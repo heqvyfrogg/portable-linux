@@ -42,6 +42,20 @@ set /a SEC=0
 <nul set /p="[INFO] Launching Debian... "
 
 :WAIT_SSH
+rem Check if QEMU process died unexpectedly (fail fast instead of hanging 45s)
+%SystemRoot%\System32\tasklist.exe /fi "imagename eq qemu-system-x86_64w.exe" 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64w" >nul
+if errorlevel 1 (
+  echo.
+  echo [ERROR] QEMU process terminated unexpectedly.
+  if exist "%ROOT%\boot.log" (
+    echo --- Last lines of boot.log ---
+    powershell -NoProfile -Command "Get-Content '%ROOT%\boot.log' -Tail 10 -ErrorAction SilentlyContinue"
+    echo ------------------------------
+  )
+  pause
+  exit /b 1
+)
+
 %SSH_CMD% %SSH_OPTS% -o BatchMode=yes -o ConnectTimeout=1 -o LogLevel=QUIET debian@127.0.0.1 "exit" 2>nul
 if not errorlevel 1 goto SSH_READY
 

@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 rem Normalize ROOT to absolute canonical path (handles spaces safely)
 for %%I in ("%~dp0..") do set "ROOT=%%~fI"
 
