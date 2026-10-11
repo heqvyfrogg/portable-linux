@@ -61,7 +61,8 @@ if not errorlevel 1 goto SSH_READY
 set /a SEC+=1
 <nul set /p="!SEC!s "
 
-if !SEC! geq 90 goto ERR_TIMEOUT
+if "%BOOT_TIMEOUT%"=="" set "BOOT_TIMEOUT=120"
+if !SEC! geq !BOOT_TIMEOUT! goto ERR_TIMEOUT
 goto WAIT_SSH
 
 :ERR_QEMU_DIED
@@ -77,7 +78,7 @@ exit /b 1
 
 :ERR_TIMEOUT
 echo.
-echo [ERROR] Boot timed out after 90 seconds.
+echo [ERROR] Boot timed out after %BOOT_TIMEOUT% seconds.
 pause
 exit /b 1
 
