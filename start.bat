@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 title Debian 12 (Portable)
@@ -81,8 +81,8 @@ exit /b 1
 :SSH_READY
 echo [Ready]
 
-rem 3. Optimize Guest I/O, DNS, APT, and Git automatically (only on first boot or when needed)
-%SSH_CMD% %SSH_OPTS% -o BatchMode=yes debian@127.0.0.1 "if [ ! -f /etc/.portable_speedup_applied ]; then sudo sh -c 'mkdir -p /etc/dpkg/dpkg.cfg.d /etc/apt/apt.conf.d /etc/apt/sources.list.d && echo force-unsafe-io > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && chattr -i /etc/resolv.conf 2>/dev/null; printf \"nameserver 1.1.1.1\nnameserver 8.8.8.8\noptions timeout:1 attempts:2 single-request\n\" > /etc/resolv.conf && chattr +i /etc/resolv.conf 2>/dev/null; printf \"Acquire::Languages \\\"none\\\";\nAPT::Acquire::Translation \\\"none\\\";\nAcquire::PDiffs \\\"false\\\";\nAcquire::ForceIPv4 \\\"true\\\";\n\" > /etc/apt/apt.conf.d/99speedup; printf \"Types: deb\nURIs: http://ftp.jaist.ac.jp/debian\nSuites: bookworm bookworm-updates bookworm-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.debian.org/debian-security\nSuites: bookworm-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\" > /etc/apt/sources.list.d/debian.sources; touch /etc/.portable_speedup_applied'; git config --global pack.threads 4; git config --global core.preloadindex true; fi" 2>nul
+rem 3. Optimize Guest I/O, DNS, APT, Git, and nano paste automatically (only on first boot or when needed)
+%SSH_CMD% %SSH_OPTS% -o BatchMode=yes debian@127.0.0.1 "if [ ! -f /etc/.portable_speedup_applied ]; then sudo sh -c 'mkdir -p /etc/dpkg/dpkg.cfg.d /etc/apt/apt.conf.d /etc/apt/sources.list.d && echo force-unsafe-io > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && chattr -i /etc/resolv.conf 2>/dev/null; printf \"nameserver 1.1.1.1\nnameserver 8.8.8.8\noptions timeout:1 attempts:2 single-request\n\" > /etc/resolv.conf && chattr +i /etc/resolv.conf 2>/dev/null; printf \"Acquire::Languages \\\"none\\\";\nAPT::Acquire::Translation \\\"none\\\";\nAcquire::PDiffs \\\"false\\\";\nAcquire::ForceIPv4 \\\"true\\\";\n\" > /etc/apt/apt.conf.d/99speedup; printf \"Types: deb\nURIs: http://ftp.jaist.ac.jp/debian\nSuites: bookworm bookworm-updates bookworm-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.debian.org/debian-security\nSuites: bookworm-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\" > /etc/apt/sources.list.d/debian.sources; printf \"\nunbind ^J main\nset softwrap\nset tabstospaces\nset tabsize 4\n\" >> /etc/nanorc; touch /etc/.portable_speedup_applied'; printf \"unbind ^J main\nset softwrap\nset tabstospaces\nset tabsize 4\n\" > ~/.nanorc; git config --global pack.threads 4; git config --global core.preloadindex true; fi" 2>nul
 
 cls
 echo ========================================================

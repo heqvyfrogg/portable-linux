@@ -33,6 +33,8 @@
 ## 2. 特徴
 
 - **Windows機能（OpenSSH等）への依存ゼロ**: 公式ポータブル版 OpenSSH（`bin\ssh.exe`）を同梱。
+- **nano エディタのペースト二重改行を完全防止**:
+  - Windows のクリップボード（CRLF）を nano に貼り付けた際、`\r` と `\n` が二重に処理されて行間が空行だらけになる問題を `unbind ^J main` により根本解消。
 - **インターネット接続・DNS自動補正**:
   - QEMU user networking (SLIRP) にパブリック DNS (`1.1.1.1`) を指定。
   - 起動時に `/etc/resolv.conf` へパブリック DNS (`1.1.1.1` / `8.8.8.8`) を自動注入。
