@@ -4,8 +4,11 @@ setlocal enabledelayedexpansion
 title Debian 13 (Portable)
 call "%~dp0scripts\00-common.bat"
 
-rem 0. Check core dependencies (QEMU, SSH, Debian image)
+rem 0. Check core dependencies (QEMU, SSH, Debian base image, SSH key)
 if not exist "%QEMU%" goto RUN_AUTO_INIT
+if not exist "%ROOT%\bin\ssh.exe" goto RUN_AUTO_INIT
+if not exist "%ROOT%\%BASE_IMAGE%" goto RUN_AUTO_INIT
+if not exist "%ROOT%\ssh\id_ed25519" goto RUN_AUTO_INIT
 goto CHECK_DISK
 
 :RUN_AUTO_INIT

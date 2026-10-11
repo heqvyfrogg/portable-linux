@@ -64,7 +64,7 @@ if not exist "%ROOT%\qemu\qemu-system-x86_64w.exe" (
 rem 5. Download Debian 13 Cloud Image (Trixie)
 set "BASE_IMG=%ROOT%\images\debian-13-genericcloud-amd64-daily.qcow2"
 if not exist "%BASE_IMG%" (
-  echo [4/6] Downloading Debian 13 cloud image (approx 350MB)...
+  echo [4/6] Downloading Debian 13 cloud image - approx 350MB...
   curl.exe -L -o "%BASE_IMG%" "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-genericcloud-amd64-daily.qcow2"
 ) else (
   echo [4/6] Debian base cloud image already present.
