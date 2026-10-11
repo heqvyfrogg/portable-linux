@@ -1,4 +1,4 @@
-﻿# ISO 置き場
+# ISO配置ディレクトリ
 
-ここに好きな Linux ディストリビューションの `.iso` ファイル（Ubuntu, Arch, Alpine, Kali, Fedora など）を配置してください。
-配置後、フォルダ直下の `boot-iso.bat` を実行するか、`.iso` ファイルを `boot-iso.bat` にドラッグ＆ドロップしてください。
+Linuxディストリビューションの `.iso` ファイル（Ubuntu、Arch、Alpine、Kali、Fedora等）を配置するフォルダです。
+配置後、フォルダ直下の `boot-iso.bat` を実行するか、`.iso` ファイルを `boot-iso.bat` にドラッグ＆ドロップして起動します。
