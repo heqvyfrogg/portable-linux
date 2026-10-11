@@ -24,7 +24,7 @@ jobs:
           mkdir -p package/disk package/iso package/images package/ssh
           touch package/disk/.gitkeep package/iso/.gitkeep package/images/.gitkeep package/ssh/.gitkeep
           cp start.bat boot-iso.bat start-custom.bat init.bat README.md package/
-          cp -r scripts package/
+          cp -r scripts config package/
           cd package
           zip -r ../portable-linux.zip .
           cd ..

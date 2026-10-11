@@ -4,11 +4,29 @@ setlocal enabledelayedexpansion
 title Portable Linux - Boot from ISO
 call "%~dp0scripts\00-common.bat"
 
+rem Check core dependencies (QEMU)
+if not exist "%ROOT%\qemu\qemu-system-x86_64.exe" (
+  echo ========================================================
+  echo   First-time setup detected: QEMU components missing.
+  echo   Running automatic initialization (init.bat)...
+  echo ========================================================
+  echo.
+  call "%ROOT%\init.bat"
+  if errorlevel 1 (
+    echo [ERROR] Initialization failed.
+    pause
+    exit /b 1
+  )
+)
+
 echo ========================================================
 echo   Portable Linux - Boot from ISO
 echo   Ubuntu, Arch, Alpine, Kali, Fedora, etc.
 echo ========================================================
 echo.
+
+if not exist "%ROOT%\iso" mkdir "%ROOT%\iso"
+if not exist "%ROOT%\disk" mkdir "%ROOT%\disk"
 
 rem 1. Determine ISO file: from argument (drag & drop) or dedicated iso\ folder only
 set "ISO_PATH=%~1"

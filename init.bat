@@ -80,11 +80,17 @@ if not exist "%ROOT%\ssh\id_ed25519" (
   echo [5/6] SSH keypair already exists.
 )
 
+rem Build cloud-init ISO with user's generated public key (dynamic, non-hardcoded)
+echo       Generating cloud-init configuration disk (cidata.iso)...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\scripts\make-cidata.ps1" -Root "%ROOT%" >nul 2>&1
+
 rem 7. Create differential disk
 set "DIFF_IMG=%ROOT%\disk\debian.qcow2"
 if not exist "%DIFF_IMG%" (
   echo [6/6] Creating 20GB differential virtual disk...
-  "%ROOT%\qemu\qemu-img.exe" create -f qcow2 -b "..\images\debian-12-genericcloud-amd64.qcow2" -F qcow2 "%DIFF_IMG%" 20G >nul
+  pushd "%ROOT%\disk"
+  "%ROOT%\qemu\qemu-img.exe" create -f qcow2 -b "..\images\debian-12-genericcloud-amd64.qcow2" -F qcow2 "debian.qcow2" 20G >nul
+  popd
 ) else (
   echo [6/6] Differential disk already exists.
 )

@@ -4,6 +4,21 @@ setlocal enabledelayedexpansion
 title Debian 12 (Portable)
 call "%~dp0scripts\00-common.bat"
 
+rem 0. Check core dependencies (QEMU, SSH, Debian image)
+if not exist "%QEMU%" (
+  echo ========================================================
+  echo   First-time setup detected: Core components missing.
+  echo   Running automatic initialization (init.bat)...
+  echo ========================================================
+  echo.
+  call "%ROOT%\init.bat"
+  if errorlevel 1 (
+    echo [ERROR] Initialization failed.
+    pause
+    exit /b 1
+  )
+)
+
 if not exist "%ROOT%\%DISK_IMAGE%" (
   echo [INFO] First-time setup: Creating virtual disk...
   call "%~dp0scripts\01-make-disk.bat"
@@ -12,9 +27,12 @@ if not exist "%ROOT%\%DISK_IMAGE%" (
 rem 1. Check if QEMU is already running, if not launch with unsafe cache and tb-size=1024
 %SystemRoot%\System32\tasklist.exe /fi "imagename eq qemu-system-x86_64w.exe" 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64w" >nul
 if errorlevel 1 (
+  set "CIDATA_OPT="
+  if exist "%ROOT%\config\cidata.iso" set "CIDATA_OPT=-cdrom "%ROOT%\config\cidata.iso""
+
   start "" "%QEMU%" ^
     -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
-    -drive file="%ROOT%\%DISK_IMAGE%",if=virtio,cache=unsafe ^
+    -drive file="%ROOT%\%DISK_IMAGE%",if=virtio,cache=unsafe !CIDATA_OPT! ^
     -netdev user,id=n0,ipv6=off,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
     -device virtio-rng-pci -vga none -display none -serial file:"%ROOT%\boot.log"
 )
