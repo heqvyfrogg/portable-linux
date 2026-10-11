@@ -8,6 +8,6 @@ echo [INFO] Starting Debian in background (SSH port: %SSH_PORT%)...
 start "" "%QEMU%" ^
   -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
   -drive file="%ROOT%\%DISK_IMAGE%",if=virtio,cache=unsafe ^
-  -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
+  -netdev user,id=n0,ipv6=off,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
   -device virtio-rng-pci -vga none -display none -serial file:"%ROOT%\boot.log"
 echo [OK] Debian launched. Ready in ~10 seconds.

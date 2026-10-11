@@ -15,7 +15,7 @@ if errorlevel 1 (
   start "" "%QEMU%" ^
     -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
     -drive file="%ROOT%\%DISK_IMAGE%",if=virtio,cache=unsafe ^
-    -netdev user,id=n0,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
+    -netdev user,id=n0,ipv6=off,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
     -device virtio-rng-pci -vga none -display none -serial file:"%ROOT%\boot.log"
 )
 
@@ -42,10 +42,13 @@ goto WAIT_SSH
 :SSH_READY
 echo [Ready]
 
-rem 3. Optimize Guest I/O and DNS automatically
-rem - force-unsafe-io: dramatically accelerates apt/dpkg installation
-rem - resolv.conf: sets high-speed public DNS (1.1.1.1 / 8.8.8.8)
-%SSH_CMD% %SSH_OPTS% -o BatchMode=yes debian@127.0.0.1 "sudo sh -c 'echo force-unsafe-io > /etc/dpkg/dpkg.cfg.d/unsafe-io; printf \"nameserver 1.1.1.1\nnameserver 8.8.8.8\n\" > /etc/resolv.conf'" 2>nul
+rem 3. Optimize Guest I/O, DNS, APT, and Git automatically
+rem - force-unsafe-io: skips per-file fsync, accelerating apt/dpkg
+rem - resolv.conf: locks fast IPv4 DNS (1.1.1.1 / 8.8.8.8) with 1s timeout
+rem - 99speedup: skips translation downloads and forces IPv4
+rem - debian.sources: uses high-speed Japan mirror (JAIST) without deb-src
+rem - git config: enables multithreaded pack processing and preloading
+%SSH_CMD% %SSH_OPTS% -o BatchMode=yes debian@127.0.0.1 "sudo sh -c 'mkdir -p /etc/dpkg/dpkg.cfg.d /etc/apt/apt.conf.d /etc/apt/sources.list.d && echo force-unsafe-io > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && chattr -i /etc/resolv.conf 2>/dev/null; printf \"nameserver 1.1.1.1\nnameserver 8.8.8.8\noptions timeout:1 attempts:2 single-request\n\" > /etc/resolv.conf && chattr +i /etc/resolv.conf 2>/dev/null; printf \"Acquire::Languages \\\"none\\\";\nAPT::Acquire::Translation \\\"none\\\";\nAcquire::PDiffs \\\"false\\\";\nAcquire::ForceIPv4 \\\"true\\\";\n\" > /etc/apt/apt.conf.d/99speedup; if [ ! -f /etc/apt/sources.list.d/.speedup_applied ]; then printf \"Types: deb\nURIs: http://ftp.jaist.ac.jp/debian\nSuites: bookworm bookworm-updates bookworm-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.debian.org/debian-security\nSuites: bookworm-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\" > /etc/apt/sources.list.d/debian.sources && touch /etc/apt/sources.list.d/.speedup_applied; fi'; git config --global pack.threads 4; git config --global core.preloadindex true" 2>nul
 
 cls
 echo ========================================================
