@@ -38,7 +38,7 @@ start "" "%QEMU%" ^
   -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
   -drive file="%ROOT%\%DISK_IMAGE%",if=virtio,cache=unsafe %CIDATA_OPT% ^
   -netdev user,id=n0,ipv6=off,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
-  -device virtio-rng-pci -vga none -display none -serial file:"%ROOT%\boot.log"
+  -device virtio-rng-pci -vga virtio -display none -serial file:"%ROOT%\boot.log"
 
 :QEMU_ALREADY_RUNNING
 
@@ -82,7 +82,7 @@ exit /b 1
 echo [Ready]
 
 rem 3. Optimize Guest I/O, DNS, APT, Git, and system-wide terminal paste automatically
-%SSH_CMD% %SSH_OPTS% -o BatchMode=yes debian@127.0.0.1 "if [ ! -f /etc/.portable_speedup_applied ]; then sudo sh -c 'mkdir -p /etc/dpkg/dpkg.cfg.d /etc/apt/apt.conf.d /etc/apt/sources.list.d && echo force-unsafe-io > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && chattr -i /etc/resolv.conf 2>/dev/null; printf \"nameserver 1.1.1.1\nnameserver 8.8.8.8\noptions timeout:1 attempts:2 single-request\n\" > /etc/resolv.conf && chattr +i /etc/resolv.conf 2>/dev/null; printf \"Acquire::Languages \\\"none\\\";\nAPT::Acquire::Translation \\\"none\\\";\nAcquire::PDiffs \\\"false\\\";\nAcquire::ForceIPv4 \\\"true\\\";\n\" > /etc/apt/apt.conf.d/99speedup; printf \"Types: deb\nURIs: http://ftp.jaist.ac.jp/debian\nSuites: trixie trixie-updates trixie-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.debian.org/debian-security\nSuites: trixie-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\" > /etc/apt/sources.list.d/debian.sources; printf \"\nset enable-bracketed-paste on\n\" >> /etc/inputrc; printf \"\nunbind ^J main\nset softwrap\nset tabstospaces\nset tabsize 4\n\" >> /etc/nanorc; touch /etc/.portable_speedup_applied'; command -v git >/dev/null 2>&1 && { git config --global pack.threads 4; git config --global core.preloadindex true; }; fi" 2>nul
+%SSH_CMD% %SSH_OPTS% -o BatchMode=yes debian@127.0.0.1 "if [ ! -f /etc/.portable_speedup_applied ]; then sudo sh -c 'mkdir -p /etc/dpkg/dpkg.cfg.d /etc/apt/apt.conf.d /etc/apt/sources.list.d /etc/cloud && touch /etc/cloud/cloud-init.disabled && echo force-unsafe-io > /etc/dpkg/dpkg.cfg.d/force-unsafe-io && chattr -i /etc/resolv.conf 2>/dev/null; printf \"nameserver 1.1.1.1\nnameserver 8.8.8.8\noptions timeout:1 attempts:2 single-request\n\" > /etc/resolv.conf && chattr +i /etc/resolv.conf 2>/dev/null; printf \"Acquire::Languages \\\"none\\\";\nAPT::Acquire::Translation \\\"none\\\";\nAcquire::PDiffs \\\"false\\\";\nAcquire::ForceIPv4 \\\"true\\\";\n\" > /etc/apt/apt.conf.d/99speedup; printf \"Types: deb\nURIs: http://ftp.jaist.ac.jp/debian\nSuites: trixie trixie-updates trixie-backports\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.debian.org/debian-security\nSuites: trixie-security\nComponents: main contrib non-free non-free-firmware\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n\" > /etc/apt/sources.list.d/debian.sources; printf \"\nset enable-bracketed-paste on\n\" >> /etc/inputrc; printf \"\nunbind ^J main\nset softwrap\nset tabstospaces\nset tabsize 4\n\" >> /etc/nanorc; touch /etc/.portable_speedup_applied'; command -v git >/dev/null 2>&1 && { git config --global pack.threads 4; git config --global core.preloadindex true; }; fi" 2>nul
 
 cls
 echo ========================================================
