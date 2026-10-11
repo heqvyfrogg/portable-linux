@@ -40,14 +40,17 @@ $u12 = "ssh_pwauth: true"
 $u13 = "chpasswd:"
 $u14 = "  expire: false"
 $u15 = "write_files:"
-$u16 = "  - path: /etc/nanorc.d/portable.nanorc"
+$u16 = "  - path: /etc/inputrc.d/portable.inputrc"
 $u17 = "    content: |"
-$u18 = "      unbind ^J main"
-$u19 = "      set softwrap"
-$u20 = "      set tabstospaces"
-$u21 = "      set tabsize 4"
+$u18 = "      set enable-bracketed-paste on"
+$u19 = "  - path: /etc/nanorc.d/portable.nanorc"
+$u20 = "    content: |"
+$u21 = "      unbind ^J main"
+$u22 = "      set softwrap"
+$u23 = "      set tabstospaces"
+$u24 = "      set tabsize 4"
 
-$userContent = "$u1`n$u2`n$u3`n$u4`n$u5`n$u6`n$u7`n$u8`n$u9`n$u10`n$u11`n$u12`n$u13`n$u14`n$u15`n$u16`n$u17`n$u18`n$u19`n$u20`n$u21`n"
+$userContent = "$u1`n$u2`n$u3`n$u4`n$u5`n$u6`n$u7`n$u8`n$u9`n$u10`n$u11`n$u12`n$u13`n$u14`n$u15`n$u16`n$u17`n$u18`n$u19`n$u20`n$u21`n$u22`n$u23`n$u24`n"
 [System.IO.File]::WriteAllText($userPath, $userContent, [System.Text.Encoding]::UTF8)
 
 # 2. meta-data を動的生成

@@ -13,6 +13,9 @@ chpasswd:
   expire: false
 
 write_files:
+  - path: /etc/inputrc.d/portable.inputrc
+    content: |
+      set enable-bracketed-paste on
   - path: /etc/nanorc.d/portable.nanorc
     content: |
       unbind ^J main
