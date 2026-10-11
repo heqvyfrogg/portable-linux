@@ -11,7 +11,7 @@ set /a STOP_SEC=0
 %SystemRoot%\System32\tasklist.exe /fi "imagename eq qemu-system-x86_64w.exe" 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64w" >nul
 if errorlevel 1 goto STOPPED
 
-timeout /t 1 /nobreak >nul
+%SystemRoot%\System32\timeout.exe /t 1 /nobreak >nul 2>&1
 set /a STOP_SEC+=1
 <nul set /p="!STOP_SEC!s "
 

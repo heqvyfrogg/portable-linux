@@ -5,20 +5,23 @@ title Portable Linux - Custom OS
 call "%~dp0scripts\00-common.bat"
 
 rem Check core dependencies (QEMU)
-if not exist "%ROOT%\qemu\qemu-system-x86_64.exe" (
-  echo ========================================================
-  echo   First-time setup detected: QEMU components missing.
-  echo   Running automatic initialization (init.bat)...
-  echo ========================================================
-  echo.
-  call "%ROOT%\init.bat"
-  if errorlevel 1 (
-    echo [ERROR] Initialization failed.
-    pause
-    exit /b 1
-  )
+if not exist "%ROOT%\qemu\qemu-system-x86_64.exe" goto RUN_AUTO_INIT
+goto CORE_READY
+
+:RUN_AUTO_INIT
+echo ========================================================
+echo   First-time setup detected: QEMU components missing.
+echo   Running automatic initialization [init.bat] ...
+echo ========================================================
+echo.
+call "%ROOT%\init.bat"
+if errorlevel 1 (
+  echo [ERROR] Initialization failed.
+  pause
+  exit /b 1
 )
 
+:CORE_READY
 set "TARGET_DISK=%ROOT%\disk\custom.qcow2"
 
 if not exist "!TARGET_DISK!" goto ERR_DISK_NOT_FOUND

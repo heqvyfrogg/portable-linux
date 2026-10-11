@@ -5,20 +5,23 @@ title Debian 12 (Portable)
 call "%~dp0scripts\00-common.bat"
 
 rem 0. Check core dependencies (QEMU, SSH, Debian image)
-if not exist "%QEMU%" (
-  echo ========================================================
-  echo   First-time setup detected: Core components missing.
-  echo   Running automatic initialization (init.bat)...
-  echo ========================================================
-  echo.
-  call "%ROOT%\init.bat"
-  if errorlevel 1 (
-    echo [ERROR] Initialization failed.
-    pause
-    exit /b 1
-  )
+if not exist "%QEMU%" goto RUN_AUTO_INIT
+goto CHECK_DISK
+
+:RUN_AUTO_INIT
+echo ========================================================
+echo   First-time setup detected: Core components missing.
+echo   Running automatic initialization [init.bat] ...
+echo ========================================================
+echo.
+call "%ROOT%\init.bat"
+if errorlevel 1 (
+  echo [ERROR] Initialization failed.
+  pause
+  exit /b 1
 )
 
+:CHECK_DISK
 if not exist "%ROOT%\%DISK_IMAGE%" (
   echo [INFO] First-time setup: Creating virtual disk...
   call "%~dp0scripts\01-make-disk.bat"
@@ -26,16 +29,18 @@ if not exist "%ROOT%\%DISK_IMAGE%" (
 
 rem 1. Check if QEMU is already running, if not launch with unsafe cache and tb-size=1024
 %SystemRoot%\System32\tasklist.exe /fi "imagename eq qemu-system-x86_64w.exe" 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64w" >nul
-if errorlevel 1 (
-  set "CIDATA_OPT="
-  if exist "%ROOT%\config\cidata.iso" set "CIDATA_OPT=-cdrom "%ROOT%\config\cidata.iso""
+if not errorlevel 1 goto QEMU_ALREADY_RUNNING
 
-  start "" "%QEMU%" ^
-    -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
-    -drive file="%ROOT%\%DISK_IMAGE%",if=virtio,cache=unsafe !CIDATA_OPT! ^
-    -netdev user,id=n0,ipv6=off,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
-    -device virtio-rng-pci -vga none -display none -serial file:"%ROOT%\boot.log"
-)
+set "CIDATA_OPT="
+if exist "%ROOT%\config\cidata.iso" set CIDATA_OPT=-cdrom "%ROOT%\config\cidata.iso"
+
+start "" "%QEMU%" ^
+  -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
+  -drive file="%ROOT%\%DISK_IMAGE%",if=virtio,cache=unsafe %CIDATA_OPT% ^
+  -netdev user,id=n0,ipv6=off,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
+  -device virtio-rng-pci -vga none -display none -serial file:"%ROOT%\boot.log"
+
+:QEMU_ALREADY_RUNNING
 
 rem 2. Progress loop
 set /a SEC=0
@@ -44,32 +49,34 @@ set /a SEC=0
 :WAIT_SSH
 rem Check if QEMU process died unexpectedly (fail fast instead of hanging 45s)
 %SystemRoot%\System32\tasklist.exe /fi "imagename eq qemu-system-x86_64w.exe" 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64w" >nul
-if errorlevel 1 (
-  echo.
-  echo [ERROR] QEMU process terminated unexpectedly.
-  if exist "%ROOT%\boot.log" (
-    echo --- Last lines of boot.log ---
-    powershell -NoProfile -Command "Get-Content '%ROOT%\boot.log' -Tail 10 -ErrorAction SilentlyContinue"
-    echo ------------------------------
-  )
-  pause
-  exit /b 1
-)
+if errorlevel 1 goto ERR_QEMU_DIED
 
 %SSH_CMD% %SSH_OPTS% -o BatchMode=yes -o ConnectTimeout=1 -o LogLevel=QUIET debian@127.0.0.1 "exit" 2>nul
 if not errorlevel 1 goto SSH_READY
 
-timeout /t 1 /nobreak >nul
+%SystemRoot%\System32\timeout.exe /t 1 /nobreak >nul 2>&1
 set /a SEC+=1
 <nul set /p="!SEC!s "
 
-if !SEC! geq 45 (
-  echo.
-  echo [ERROR] Boot timed out after 45 seconds.
-  pause
-  exit /b 1
-)
+if !SEC! geq 45 goto ERR_TIMEOUT
 goto WAIT_SSH
+
+:ERR_QEMU_DIED
+echo.
+echo [ERROR] QEMU process terminated unexpectedly.
+if exist "%ROOT%\boot.log" (
+  echo --- Last lines of boot.log ---
+  powershell -NoProfile -Command "Get-Content -Path '%ROOT%\boot.log' -Tail 10 -ErrorAction SilentlyContinue"
+  echo ------------------------------
+)
+pause
+exit /b 1
+
+:ERR_TIMEOUT
+echo.
+echo [ERROR] Boot timed out after 45 seconds.
+pause
+exit /b 1
 
 :SSH_READY
 echo [Ready]
@@ -101,7 +108,7 @@ set /a STOP_SEC=0
 %SystemRoot%\System32\tasklist.exe /fi "imagename eq qemu-system-x86_64w.exe" 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64w" >nul
 if errorlevel 1 goto STOPPED
 
-timeout /t 1 /nobreak >nul
+%SystemRoot%\System32\timeout.exe /t 1 /nobreak >nul 2>&1
 set /a STOP_SEC+=1
 <nul set /p="!STOP_SEC!s "
 
@@ -114,4 +121,4 @@ goto WAIT_STOP
 :STOPPED
 echo [Done]
 echo [OK] Goodbye!
-timeout /t 1 /nobreak >nul
+%SystemRoot%\System32\timeout.exe /t 1 /nobreak >nul 2>&1
