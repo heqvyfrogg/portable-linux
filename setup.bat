@@ -22,8 +22,8 @@ echo   No Administrator Privileges Required.
 echo ========================================================
 echo.
 
-rem Check if active QEMU or SSH process is running before updating
-%SystemRoot%\System32\tasklist.exe /fi "imagename eq qemu-system-x86_64w.exe" 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64w" >nul
+rem Check if active QEMU or SSH process is running before updating (detects both console and windowed QEMU)
+%SystemRoot%\System32\tasklist.exe 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64" >nul
 if not errorlevel 1 (
   echo [ERROR] QEMU VM process is currently running.
   echo Please stop the running VM with 'scripts\04-stop.bat' or close it before running setup.
@@ -33,22 +33,21 @@ if not errorlevel 1 (
 
 rem Check if already installed in this directory
 set "IS_UPDATE=0"
-if exist "%TARGET_DIR%\start.bat" (
-  set "IS_UPDATE=1"
-  echo [WARN] Portable Linux already exists in: %TARGET_DIR%
-  set "OVERWRITE=n"
-  set /p "OVERWRITE=Do you want to re-download and update files? (y/N): "
-  set "OVERWRITE=!OVERWRITE: =!"
-  if /i not "!OVERWRITE!"=="y" exit /b 0
-)
+if not exist "%TARGET_DIR%\start.bat" goto PROCEED_DOWNLOAD
+
+set "IS_UPDATE=1"
+echo [WARN] Portable Linux already exists in: %TARGET_DIR%
+set "OVERWRITE=n"
+set /p "OVERWRITE=Do you want to re-download and update files? (y/N): "
+set "OVERWRITE=!OVERWRITE: =!"
+if /i not "!OVERWRITE!"=="y" exit /b 0
 
 rem Backup existing user config if updating
-if "!IS_UPDATE!"=="1" (
-  if exist "%TARGET_DIR%\config\settings.cfg" (
-    copy /y "%TARGET_DIR%\config\settings.cfg" "%TEMP%\portable_linux_settings_bak.cfg" >nul 2>&1
-  )
+if exist "%TARGET_DIR%\config\settings.cfg" (
+  copy /y "%TARGET_DIR%\config\settings.cfg" "%TEMP%\portable_linux_settings_bak.cfg" >nul 2>&1
 )
 
+:PROCEED_DOWNLOAD
 echo [1/2] Downloading latest portable-linux package from GitHub...
 set "ZIP_FILE=%TEMP%\portable-linux_%RANDOM%.zip"
 curl.exe -fL -sS -o "%ZIP_FILE%" "https://github.com/heqvyfrogg/portable-linux/releases/latest/download/portable-linux.zip"
@@ -74,7 +73,7 @@ rem Restore preserved user config if updating
 if "!IS_UPDATE!"=="1" (
   if exist "%TEMP%\portable_linux_settings_bak.cfg" (
     move /y "%TEMP%\portable_linux_settings_bak.cfg" "%TARGET_DIR%\config\settings.cfg" >nul 2>&1
-    echo       Restored existing user configuration (settings.cfg).
+    echo       Restored existing user configuration [settings.cfg].
   )
 )
 
@@ -89,18 +88,19 @@ rem Offer immediate core components initialization (~600MB: QEMU, SSH, Debian 13
 set "RUN_INIT=y"
 set /p "RUN_INIT=Do you want to download core components now (~600MB: QEMU and Debian 13)? [Y/n]: "
 set "RUN_INIT=!RUN_INIT: =!"
-if /i "!RUN_INIT!"=="n" (
-  echo.
-  echo [NOTE] Core components (QEMU and Debian 13 base image) will be
-  echo        automatically downloaded on first launch via 'start.bat'.
-  echo.
-  echo To start later:
-  echo   Double-click '%TARGET_DIR%\start.bat'
-  echo.
-  pause
-  exit /b 0
-)
+if /i not "!RUN_INIT!"=="n" goto DO_INIT
 
+echo.
+echo [NOTE] Core components [QEMU and Debian 13 base image] will be
+echo        automatically downloaded on first launch via 'start.bat'.
+echo.
+echo To start later:
+echo   Double-click '%TARGET_DIR%\start.bat'
+echo.
+pause
+exit /b 0
+
+:DO_INIT
 echo.
 echo ========================================================
 echo   Starting initialization [init.bat] ...
@@ -120,3 +120,4 @@ echo   Double-click '%TARGET_DIR%\start.bat' to launch!
 echo ========================================================
 echo.
 pause
+exit /b 0

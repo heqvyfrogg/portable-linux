@@ -22,3 +22,31 @@ write_files:
       set softwrap
       set tabstospaces
       set tabsize 4
+  - path: /etc/dpkg/dpkg.cfg.d/force-unsafe-io
+    content: |
+      force-unsafe-io
+  - path: /etc/apt/apt.conf.d/99speedup
+    content: |
+      Acquire::Languages "none";
+      Acquire::PDiffs "false";
+      Acquire::ForceIPv4 "true";
+  - path: /etc/apt/sources.list.d/debian.sources
+    content: |
+      Types: deb
+      URIs: http://ftp.jaist.ac.jp/debian
+      Suites: trixie trixie-updates trixie-backports
+      Components: main contrib non-free non-free-firmware
+      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+      Types: deb
+      URIs: http://security.debian.org/debian-security
+      Suites: trixie-security
+      Components: main contrib non-free non-free-firmware
+      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+  - path: /etc/cloud/cloud-init.disabled
+    content: |
+      disabled
+bootcmd:
+  - echo "nameserver 1.1.1.1" > /etc/resolv.conf
+  - echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+  - echo "options timeout:1 attempts:2 single-request" >> /etc/resolv.conf

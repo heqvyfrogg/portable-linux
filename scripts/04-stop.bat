@@ -9,7 +9,7 @@ set /a STOP_SEC=0
 <nul set /p="[INFO] Finalizing VM process... "
 
 :WAIT_STOP
-%SystemRoot%\System32\tasklist.exe /fi "imagename eq qemu-system-x86_64w.exe" 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64w" >nul
+%SystemRoot%\System32\tasklist.exe 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64" >nul
 if errorlevel 1 goto STOPPED
 
 %SystemRoot%\System32\timeout.exe /t 1 /nobreak >nul 2>&1
@@ -18,6 +18,7 @@ set /a STOP_SEC+=1
 
 if !STOP_SEC! geq 15 (
   %SystemRoot%\System32\taskkill.exe /f /im qemu-system-x86_64w.exe >nul 2>&1
+  %SystemRoot%\System32\taskkill.exe /f /im qemu-system-x86_64.exe >nul 2>&1
   goto STOPPED
 )
 goto WAIT_STOP
@@ -25,3 +26,4 @@ goto WAIT_STOP
 :STOPPED
 echo [Done]
 echo [OK] VM stopped safely.
+exit /b 0

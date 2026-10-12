@@ -2,56 +2,85 @@ param(
     [string]$Root = ""
 )
 
-if (-not $Root) {
+if ($Root -eq "") {
     $Root = (Resolve-Path "$PSScriptRoot\..").Path
 }
 
-$cidataDir = Join-Path $Root "config\cidata"
-$userPath  = Join-Path $cidataDir "user-data"
-$metaPath  = Join-Path $cidataDir "meta-data"
-$isoPath   = Join-Path $Root "config\cidata.iso"
-$pubKeyPath = Join-Path $Root "ssh\id_ed25519.pub"
-$csPath    = Join-Path $Root "scripts\StreamSaver.cs"
+$cidataDir = "$Root\config\cidata"
+$isoPath = "$Root\config\cidata.iso"
+$pubKeyFile = "$Root\ssh\id_ed25519.pub"
+$csPath = "$Root\scripts\StreamSaver.cs"
 
-if (-not (Test-Path $pubKeyPath)) {
-    Write-Host "[ERROR] SSH public key not found: $pubKeyPath"
-    exit 1
+$userPath = "$cidataDir\user-data"
+$metaPath = "$cidataDir\meta-data"
+
+$pubKey = ""
+if (Test-Path $pubKeyFile) {
+    $pubKey = (Get-Content $pubKeyFile -Raw).Trim()
 }
-
-$pubKey = (Get-Content $pubKeyPath -Raw).Trim()
 
 if (-not (Test-Path $cidataDir)) {
     New-Item -ItemType Directory -Path $cidataDir -Force | Out-Null
 }
 
-# 1. Dynamically generate user-data without environment-dependent user keys
-$u1 = "#cloud-config"
-$u2 = "users:"
-$u3 = "  - name: debian"
-$u4 = "    gecos: Debian Portable User"
-$u5 = "    sudo: ALL=(ALL) NOPASSWD:ALL"
-$u6 = "    lock_passwd: false"
-$u7 = "    plain_text_passwd: debian"
-$u8 = "    shell: /bin/bash"
-$u9 = "    ssh_authorized_keys:"
-$u10 = "      - " + $pubKey
-$u11 = ""
-$u12 = "ssh_pwauth: true"
-$u13 = "chpasswd:"
-$u14 = "  expire: false"
-$u15 = "write_files:"
-$u16 = "  - path: /etc/inputrc.d/portable.inputrc"
-$u17 = "    content: |"
-$u18 = "      set enable-bracketed-paste on"
-$u19 = "  - path: /etc/nanorc.d/portable.nanorc"
-$u20 = "    content: |"
-$u21 = "      unbind ^J main"
-$u22 = "      set softwrap"
-$u23 = "      set tabstospaces"
-$u24 = "      set tabsize 4"
+# 1. Dynamically generate user-data with all VM optimizations in write_files
+$userDataLines = @(
+    "#cloud-config"
+    "users:"
+    "  - name: debian"
+    "    gecos: Debian Portable User"
+    "    sudo: ALL=(ALL) NOPASSWD:ALL"
+    "    lock_passwd: false"
+    "    plain_text_passwd: debian"
+    "    shell: /bin/bash"
+    "    ssh_authorized_keys:"
+    "      - $pubKey"
+    ""
+    "ssh_pwauth: true"
+    "chpasswd:"
+    "  expire: false"
+    "write_files:"
+    "  - path: /etc/inputrc.d/portable.inputrc"
+    "    content: |"
+    "      set enable-bracketed-paste on"
+    "  - path: /etc/nanorc.d/portable.nanorc"
+    "    content: |"
+    "      unbind ^J main"
+    "      set softwrap"
+    "      set tabstospaces"
+    "      set tabsize 4"
+    "  - path: /etc/dpkg/dpkg.cfg.d/force-unsafe-io"
+    "    content: |"
+    "      force-unsafe-io"
+    "  - path: /etc/apt/apt.conf.d/99speedup"
+    "    content: |"
+    "      Acquire::Languages `"none`";"
+    "      Acquire::PDiffs `"false`";"
+    "      Acquire::ForceIPv4 `"true`";"
+    "  - path: /etc/apt/sources.list.d/debian.sources"
+    "    content: |"
+    "      Types: deb"
+    "      URIs: http://ftp.jaist.ac.jp/debian"
+    "      Suites: trixie trixie-updates trixie-backports"
+    "      Components: main contrib non-free non-free-firmware"
+    "      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg"
+    ""
+    "      Types: deb"
+    "      URIs: http://security.debian.org/debian-security"
+    "      Suites: trixie-security"
+    "      Components: main contrib non-free non-free-firmware"
+    "      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg"
+    "  - path: /etc/cloud/cloud-init.disabled"
+    "    content: |"
+    "      disabled"
+    "bootcmd:"
+    "  - echo `"nameserver 1.1.1.1`" > /etc/resolv.conf"
+    "  - echo `"nameserver 8.8.8.8`" >> /etc/resolv.conf"
+    "  - echo `"options timeout:1 attempts:2 single-request`" >> /etc/resolv.conf"
+)
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-$userContent = "$u1`n$u2`n$u3`n$u4`n$u5`n$u6`n$u7`n$u8`n$u9`n$u10`n$u11`n$u12`n$u13`n$u14`n$u15`n$u16`n$u17`n$u18`n$u19`n$u20`n$u21`n$u22`n$u23`n$u24`n"
+$userContent = ($userDataLines -join "`n") + "`n"
 [System.IO.File]::WriteAllText($userPath, $userContent, $utf8NoBom)
 
 # 2. Dynamically generate meta-data (UTF-8 No BOM)

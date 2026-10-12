@@ -133,16 +133,45 @@ start "" "%QEMU_GUI%" -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% -drive file=
 exit /b 0
 
 :MODE_ATTACH
-set "TARGET_DISK=%ROOT%\disk\custom.qcow2"
-if not exist "!TARGET_DISK!" goto ERR_NO_DISK
+set /a DISK_COUNT=0
+for %%F in ("%ROOT%\disk\custom*.qcow2") do (
+  set /a DISK_COUNT+=1
+  set "DISK_!DISK_COUNT!=%%F"
+  set "DISK_NAME_!DISK_COUNT!=%%~nxF"
+)
 
+if !DISK_COUNT! equ 0 goto ERR_NO_DISK
+
+if !DISK_COUNT! equ 1 (
+  set "TARGET_DISK=!DISK_1!"
+  goto ATTACH_READY
+)
+
+echo ========================================================
+echo   Select Virtual Disk to Attach ISO
+echo ========================================================
 echo.
-echo [INFO] Starting with existing disk and attached ISO...
+for /l %%I in (1,1,!DISK_COUNT!) do (
+  echo   [%%I] !DISK_NAME_%%I!
+)
+echo.
+set "CHOICE=1"
+set /p "CHOICE=Select virtual disk (1-!DISK_COUNT!) [default: 1]: "
+set "CHOICE=!CHOICE: =!"
+if not defined DISK_%CHOICE% (
+  set "TARGET_DISK=!DISK_1!"
+) else (
+  set "TARGET_DISK=!DISK_%CHOICE%!"
+)
+
+:ATTACH_READY
+echo.
+echo [INFO] Starting with disk '!TARGET_DISK!' and attached ISO...
 start "" "%QEMU_GUI%" -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% -drive file="!TARGET_DISK!",if=virtio,cache=unsafe -cdrom "%ISO_PATH%" -boot d -netdev user,id=n0,ipv6=off,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 -device virtio-rng-pci -device qemu-xhci -device usb-tablet -vga virtio -display sdl
 exit /b 0
 
 :ERR_NO_DISK
 echo.
-echo [ERROR] disk\custom.qcow2 not found. Choose Mode 2 first.
+echo [ERROR] No custom virtual disk (disk\custom*.qcow2) found. Choose Mode 2 first.
 pause
 exit /b 1
