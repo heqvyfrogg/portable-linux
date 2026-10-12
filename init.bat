@@ -20,8 +20,10 @@ rem 2. Download 7-Zip standalone extractors for safe unpacking
 set "TOOLS=%ROOT%\tools"
 if not exist "%TOOLS%\7zr.exe" (
   echo [1/6] Downloading 7-Zip extraction tools...
-  curl.exe -L -s -o "%TOOLS%\7zr.exe" "https://www.7-zip.org/a/7zr.exe"
-  curl.exe -L -s -o "%TOOLS%\7z-extra.7z" "https://github.com/ip7z/7zip/releases/download/26.04/7z2604-extra.7z"
+  curl.exe -fL -sS -o "%TOOLS%\7zr.exe" "https://www.7-zip.org/a/7zr.exe"
+  if errorlevel 1 goto ERR_DOWNLOAD
+  curl.exe -fL -sS -o "%TOOLS%\7z-extra.7z" "https://github.com/ip7z/7zip/releases/download/26.04/7z2604-extra.7z"
+  if errorlevel 1 goto ERR_DOWNLOAD
   "%TOOLS%\7zr.exe" x "%TOOLS%\7z-extra.7z" -o"%TOOLS%\7z-extra" -y >nul 2>&1
   del /f /q "%TOOLS%\7z-extra.7z" >nul 2>&1
 )
@@ -32,7 +34,8 @@ if not exist "%SEVENZ%" set "SEVENZ=%TOOLS%\7z-extra\7za.exe"
 rem 3. Download and extract Win32-OpenSSH
 if not exist "%ROOT%\bin\ssh.exe" (
   echo [2/6] Downloading portable OpenSSH binaries...
-  curl.exe -L -s -o "%TOOLS%\openssh.zip" "https://github.com/PowerShell/Win32-OpenSSH/releases/download/10.0.0.0p2-Preview/OpenSSH-Win64.zip"
+  curl.exe -fL -sS -o "%TOOLS%\openssh.zip" "https://github.com/PowerShell/Win32-OpenSSH/releases/download/10.0.0.0p2-Preview/OpenSSH-Win64.zip"
+  if errorlevel 1 goto ERR_DOWNLOAD
   powershell -NoProfile -Command "Expand-Archive -Path '%TOOLS%\openssh.zip' -DestinationPath '%TOOLS%\openssh_tmp' -Force"
   move /y "%TOOLS%\openssh_tmp\OpenSSH-Win64\*" "%ROOT%\bin\" >nul
   rmdir /s /q "%TOOLS%\openssh_tmp" >nul 2>&1
@@ -45,11 +48,13 @@ if not exist "%ROOT%\bin\ssh.exe" (
 rem 4. Download and extract QEMU (non-install, registry-free)
 if not exist "%ROOT%\qemu\qemu-system-x86_64w.exe" (
   echo [3/6] Downloading QEMU Windows package...
-  curl.exe -L -o "%TOOLS%\qemu-setup.exe" "https://qemu.weilnetz.de/w64/qemu-w64-setup-20260811.exe"
+  curl.exe -fL -o "%TOOLS%\qemu-setup.exe" "https://qemu.weilnetz.de/w64/qemu-w64-setup-20260811.exe"
+  if errorlevel 1 goto ERR_DOWNLOAD
   echo       Extracting QEMU binaries without running installer...
   
   rem Download 7z installer to extract NSIS with full 7z.dll
-  curl.exe -L -s -o "%TOOLS%\7z-setup.exe" "https://github.com/ip7z/7zip/releases/download/26.04/7z2604-x64.exe"
+  curl.exe -fL -sS -o "%TOOLS%\7z-setup.exe" "https://github.com/ip7z/7zip/releases/download/26.04/7z2604-x64.exe"
+  if errorlevel 1 goto ERR_DOWNLOAD
   "%SEVENZ%" x "%TOOLS%\7z-setup.exe" -o"%TOOLS%\7z-full" -y >nul 2>&1
   "%TOOLS%\7z-full\7z.exe" x "%TOOLS%\qemu-setup.exe" -o"%ROOT%\qemu" -y >nul 2>&1
   
@@ -65,7 +70,11 @@ rem 5. Download Debian 13 Cloud Image (Trixie)
 set "BASE_IMG=%ROOT%\images\debian-13-genericcloud-amd64-daily.qcow2"
 if not exist "%BASE_IMG%" (
   echo [4/6] Downloading Debian 13 cloud image - approx 350MB...
-  curl.exe -L -o "%BASE_IMG%" "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-genericcloud-amd64-daily.qcow2"
+  curl.exe -fL -o "%BASE_IMG%" "https://cloud.debian.org/images/cloud/trixie/daily/latest/debian-13-genericcloud-amd64-daily.qcow2"
+  if errorlevel 1 (
+    if exist "%BASE_IMG%" del /f /q "%BASE_IMG%" >nul 2>&1
+    goto ERR_DOWNLOAD
+  )
 ) else (
   echo [4/6] Debian base cloud image already present.
 )
@@ -105,3 +114,10 @@ echo   Run start.bat to launch your portable Debian 13 VM.
 echo ========================================================
 echo.
 pause
+exit /b 0
+
+:ERR_DOWNLOAD
+echo.
+echo [ERROR] Download failed. Please check your network connection and try again.
+pause
+exit /b 1

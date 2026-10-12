@@ -99,16 +99,23 @@ set "TARGET_DISK=%ROOT%\disk\custom.qcow2"
 if not exist "!TARGET_DISK!" goto CREATE_DISK
 
 echo [WARN] disk\custom.qcow2 already exists.
-if not "%~2"=="" goto OVERWRITE_DISK
+if not "%~2"=="" goto BACKUP_AND_CREATE
 set "OVERWRITE=n"
-set /p "OVERWRITE=Overwrite and re-create disk? [y/N]: "
+set /p "OVERWRITE=Overwrite and re-create disk? (y: Overwrite / b: Backup existing / N: Cancel): "
 set "OVERWRITE=!OVERWRITE: =!"
 if /i "!OVERWRITE!"=="y" goto OVERWRITE_DISK
-set "TARGET_DISK=%ROOT%\disk\custom_%RANDOM%.qcow2"
-goto CREATE_DISK
+if /i "!OVERWRITE!"=="b" goto BACKUP_AND_CREATE
+echo [INFO] Installation cancelled.
+exit /b 0
 
 :OVERWRITE_DISK
 del /f /q "!TARGET_DISK!"
+goto CREATE_DISK
+
+:BACKUP_AND_CREATE
+set "BACKUP_DISK=%ROOT%\disk\custom_%RANDOM%.qcow2"
+echo [INFO] Moving existing disk to: !BACKUP_DISK!
+move /y "!TARGET_DISK!" "!BACKUP_DISK!" >nul
 goto CREATE_DISK
 
 :CREATE_DISK
