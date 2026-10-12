@@ -117,11 +117,11 @@ echo [INFO] Creating 20GB virtual disk: !TARGET_DISK! ...
 
 echo.
 echo [INFO] Starting Installation. A QEMU window will open...
-echo [TIP] インストール時の重要ポイント:
-echo       1. ブートメニューでは 'Install' (テキストモード) を選ぶとキーボードだけで快適に操作できます
-echo       2. ソフトウェアエミュレーション(TCG)のため、ネットワーク設定等で2〜3分停止して見える場合がありますが待機してください
-echo       3. ディスク書き込みの確認画面 (Write changes to disks) では必ず [Yes] を選んでください
-echo       4. インストール完了後は 'start-custom.bat' でディスクから起動できます
+echo [TIP] Key points during installation:
+echo       1. Choose 'Install' (text mode) in boot menu for smooth keyboard-only operation.
+echo       2. Under software emulation (TCG), network configuration may take 2-3 minutes.
+echo       3. Always choose [Yes] on 'Write changes to disks' screen.
+echo       4. Once installed, launch your OS anytime via 'start-custom.bat'.
 start "" "%QEMU_GUI%" -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% -drive file="!TARGET_DISK!",if=virtio,cache=unsafe -cdrom "%ISO_PATH%" -boot d -netdev user,id=n0,ipv6=off,hostfwd=tcp::%SSH_PORT%-:22,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 -device virtio-rng-pci -device qemu-xhci -device usb-tablet -vga virtio -display sdl
 exit /b 0
 
