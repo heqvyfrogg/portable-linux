@@ -23,3 +23,8 @@ __pycache__/
 
 # Custom ISOs
 /iso/*.iso
+
+# Local payload & workspace artifacts
+/payload/
+/workspace/*
+!/workspace/README.md
