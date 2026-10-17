@@ -32,31 +32,28 @@ rem 1. Check if QEMU is already running
 %SystemRoot%\System32\tasklist.exe 2>nul | %SystemRoot%\System32\findstr.exe /i "qemu-system-x86_64" >nul
 if not errorlevel 1 goto QEMU_ALREADY_RUNNING
 
-rem Ensure workspace directory exists for Zed sharing
-if not exist "%ROOT%\workspace" mkdir "%ROOT%\workspace"
-
 set "CIDATA_OPT="
 if exist "%ROOT%\config\cidata.iso" set CIDATA_OPT=-cdrom "%ROOT%\config\cidata.iso"
 
-set "WORKSPACE_OPT="
-if exist "%ROOT%\workspace" set "WORKSPACE_OPT=-drive file=fat:rw:%ROOT%\workspace,if=virtio,format=raw"
+set "PAYLOAD_OPT="
+if exist "%ROOT%\payload" set "PAYLOAD_OPT=-drive file=fat:rw:%ROOT%\payload,if=virtio,format=raw"
 
 set "QEMU_CONSOLE=%ROOT%\qemu\qemu-system-x86_64.exe"
 
 cls
 echo ========================================================
-echo   Debian GNU/Linux 13 (Portable / Console Direct Access)
+echo   Debian GNU/Linux 13 (Portable Console - Offline Dev)
 echo   Memory: %MEM%MB  vCPU: %SMP% cores  Cache: unsafe (Fast I/O)
-echo   Workspace folder: %ROOT%\workspace
-echo   (Files in workspace can be edited on Windows via Zed)
+echo   Tools: gcc, g++, Go, Python3, Helix (hx), Neovim (nvim)
 echo   Type 'exit' or 'sudo poweroff' to shut down.
+echo   Emergency exit: Press Ctrl+A, then press X.
 echo ========================================================
 echo.
 
 rem Launch QEMU with direct terminal binding (mon:stdio) and no localhost/network port requirements
 "%QEMU_CONSOLE%" ^
   -accel %ACCEL% -cpu %CPU% -m %MEM% -smp %SMP% ^
-  -drive file="%ROOT%\%DISK_IMAGE%",if=virtio,cache=unsafe %CIDATA_OPT% %WORKSPACE_OPT% ^
+  -drive file="%ROOT%\%DISK_IMAGE%",if=virtio,cache=unsafe %CIDATA_OPT% %PAYLOAD_OPT% ^
   -netdev user,id=n0,ipv6=off,dns=1.1.1.1 -device virtio-net-pci,netdev=n0 ^
   -device virtio-rng-pci -display none -serial mon:stdio
 

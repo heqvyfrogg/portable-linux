@@ -23,7 +23,7 @@ if (-not (Test-Path $cidataDir)) {
     New-Item -ItemType Directory -Path $cidataDir -Force | Out-Null
 }
 
-# 1. Dynamically generate user-data with serial auto-login and workspace auto-mount
+# 1. Dynamically generate user-data with complete offline dev toolchain and terminal optimization
 $userDataLines = @(
     "#cloud-config"
     "users:"
@@ -40,11 +40,21 @@ $userDataLines = @(
     "chpasswd:"
     "  expire: false"
     "write_files:"
+    "  - path: /etc/sudoers.d/99-debian-nopasswd"
+    "    permissions: '0440'"
+    "    content: |"
+    "      debian ALL=(ALL) NOPASSWD:ALL"
     "  - path: /etc/systemd/system/serial-getty@.service.d/override.conf"
     "    content: |"
     "      [Service]"
     "      ExecStart="
-    "      ExecStart=-/sbin/agetty -a debian --noclear %I 115200,38400,9600 linux"
+    "      ExecStart=-/sbin/agetty --autologin debian --noclear %I 115200,38400,9600 linux"
+    "  - path: /etc/profile.d/terminal.sh"
+    "    content: |"
+    "      export TERM=xterm-256color"
+    "      export COLORTERM=truecolor"
+    "      export PATH=/usr/local/go/bin:/usr/local/bin:`$PATH"
+    "      if [ -t 0 ]; then stty sane 2>/dev/null; fi"
     "  - path: /etc/inputrc.d/portable.inputrc"
     "    content: |"
     "      set enable-bracketed-paste on"
@@ -66,7 +76,7 @@ $userDataLines = @(
     "    content: |"
     "      Types: deb"
     "      URIs: http://ftp.jaist.ac.jp/debian"
-    "      Suites: trixie trixie-updates trixie-backports"
+    "      Suites: trixie trixie-updates"
     "      Components: main contrib non-free non-free-firmware"
     "      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg"
     ""
@@ -79,12 +89,21 @@ $userDataLines = @(
     "  - echo `"nameserver 1.1.1.1`" > /etc/resolv.conf"
     "  - echo `"nameserver 8.8.8.8`" >> /etc/resolv.conf"
     "  - echo `"options timeout:1 attempts:2 single-request`" >> /etc/resolv.conf"
+    "  - echo `'debian ALL=(ALL) NOPASSWD:ALL'` > /etc/sudoers.d/99-debian-nopasswd && chmod 0440 /etc/sudoers.d/99-debian-nopasswd"
     "  - mkdir -p /etc/systemd/system/serial-getty@.service.d"
-    "  - printf `'[Service]\nExecStart=\nExecStart=-/sbin/agetty -a debian --noclear %%I 115200,38400,9600 linux\n`' > /etc/systemd/system/serial-getty@.service.d/override.conf"
-    "  - mkdir -p /home/debian/workspace"
-    "  - chown -R 1000:1000 /home/debian/workspace"
-    "  - grep -q `"/home/debian/workspace`" /etc/fstab || echo `"/dev/vdb1 /home/debian/workspace vfat umask=000,uid=1000,gid=1000,nofail 0 0`" >> /etc/fstab"
-    "  - grep -q `"/home/debian/workspace`" /etc/fstab || echo `"/dev/vdb /home/debian/workspace vfat umask=000,uid=1000,gid=1000,nofail 0 0`" >> /etc/fstab"
+    "  - echo `'[Service]'` > /etc/systemd/system/serial-getty@.service.d/override.conf"
+    "  - echo `'ExecStart='` >> /etc/systemd/system/serial-getty@.service.d/override.conf"
+    "  - echo `'ExecStart=-/sbin/agetty --autologin debian --noclear %I 115200,38400,9600 linux'` >> /etc/systemd/system/serial-getty@.service.d/override.conf"
+    "  - mkdir -p /mnt/payload"
+    "  - mount -t vfat /dev/vdb1 /mnt/payload 2>/dev/null || mount -t vfat /dev/vdb /mnt/payload 2>/dev/null || true"
+    "  - if [ -f /mnt/payload/go.linux-amd64.tar.gz ]; then tar -C /usr/local -xzf /mnt/payload/go.linux-amd64.tar.gz; fi"
+    "  - if [ -f /mnt/payload/helix.tar.xz ]; then mkdir -p /tmp/hx && tar -C /tmp/hx -xJf /mnt/payload/helix.tar.xz && cp /tmp/hx/*/hx /usr/local/bin/hx && cp -r /tmp/hx/*/runtime /usr/local/bin/ && rm -rf /tmp/hx; fi"
+    "  - if [ -f /mnt/payload/nvim.tar.gz ]; then mkdir -p /tmp/nvim && tar -C /tmp/nvim -xzf /mnt/payload/nvim.tar.gz && cp -r /tmp/nvim/nvim-linux-x86_64/* /usr/local/ && rm -rf /tmp/nvim; fi"
+    "  - if [ -d /mnt/payload/debs ]; then dpkg --force-all -i /mnt/payload/debs/*.deb 2>/dev/null || true; fi"
+    "  - ln -sf /usr/bin/x86_64-linux-gnu-gcc-14 /usr/local/bin/gcc 2>/dev/null || true"
+    "  - ln -sf /usr/bin/x86_64-linux-gnu-g++-14 /usr/local/bin/g++ 2>/dev/null || true"
+    "  - ln -sf /usr/bin/make /usr/local/bin/make 2>/dev/null || true"
+    "  - umount /mnt/payload 2>/dev/null || true"
 )
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)

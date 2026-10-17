@@ -50,7 +50,7 @@ if exist "%TARGET_DIR%\config\settings.cfg" (
 :PROCEED_DOWNLOAD
 echo [1/2] Downloading latest portable-linux package from GitHub...
 set "ZIP_FILE=%TEMP%\portable-linux_%RANDOM%.zip"
-curl.exe -fL -sS -o "%ZIP_FILE%" "https://github.com/heqvyfrogg/portable-linux/releases/latest/download/portable-linux.zip"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $ProgressPreference = 'SilentlyContinue'; try { Invoke-WebRequest -Uri 'https://github.com/heqvyfrogg/portable-linux/releases/latest/download/portable-linux.zip' -OutFile '%ZIP_FILE%' -UseBasicParsing } catch { exit 1 }"
 if errorlevel 1 (
   echo [ERROR] Failed to download portable-linux.zip from GitHub Releases.
   if exist "%ZIP_FILE%" del /f /q "%ZIP_FILE%" >nul 2>&1
