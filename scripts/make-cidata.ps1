@@ -23,7 +23,7 @@ if (-not (Test-Path $cidataDir)) {
     New-Item -ItemType Directory -Path $cidataDir -Force | Out-Null
 }
 
-# 1. Dynamically generate user-data with all VM optimizations in write_files
+# 1. Dynamically generate user-data with serial auto-login and workspace auto-mount
 $userDataLines = @(
     "#cloud-config"
     "users:"
@@ -40,6 +40,11 @@ $userDataLines = @(
     "chpasswd:"
     "  expire: false"
     "write_files:"
+    "  - path: /etc/systemd/system/serial-getty@.service.d/override.conf"
+    "    content: |"
+    "      [Service]"
+    "      ExecStart="
+    "      ExecStart=-/sbin/agetty -a debian --noclear %I 115200,38400,9600 linux"
     "  - path: /etc/inputrc.d/portable.inputrc"
     "    content: |"
     "      set enable-bracketed-paste on"
@@ -70,13 +75,16 @@ $userDataLines = @(
     "      Suites: trixie-security"
     "      Components: main contrib non-free non-free-firmware"
     "      Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg"
-    "  - path: /etc/cloud/cloud-init.disabled"
-    "    content: |"
-    "      disabled"
     "bootcmd:"
     "  - echo `"nameserver 1.1.1.1`" > /etc/resolv.conf"
     "  - echo `"nameserver 8.8.8.8`" >> /etc/resolv.conf"
     "  - echo `"options timeout:1 attempts:2 single-request`" >> /etc/resolv.conf"
+    "  - mkdir -p /etc/systemd/system/serial-getty@.service.d"
+    "  - printf `'[Service]\nExecStart=\nExecStart=-/sbin/agetty -a debian --noclear %%I 115200,38400,9600 linux\n`' > /etc/systemd/system/serial-getty@.service.d/override.conf"
+    "  - mkdir -p /home/debian/workspace"
+    "  - chown -R 1000:1000 /home/debian/workspace"
+    "  - grep -q `"/home/debian/workspace`" /etc/fstab || echo `"/dev/vdb1 /home/debian/workspace vfat umask=000,uid=1000,gid=1000,nofail 0 0`" >> /etc/fstab"
+    "  - grep -q `"/home/debian/workspace`" /etc/fstab || echo `"/dev/vdb /home/debian/workspace vfat umask=000,uid=1000,gid=1000,nofail 0 0`" >> /etc/fstab"
 )
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
